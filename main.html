@@ -35,7 +35,6 @@
         };
         const InputMethod = {
             TYPE: 'type',
-            DRAW: 'draw',
         };
 
         // =========================
@@ -91,11 +90,6 @@
         const KeyboardIcon = ({ className = "w-6 h-6" }) => (
             <svg aria-hidden="true" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className={className}>
                 <path strokeLinecap="round" strokeLinejoin="round" d="M19.5 14.25v-2.625a3.375 3.375 0 00-3.375-3.375h-1.5A1.125 1.125 0 0113.5 7.125v-1.5a3.375 3.375 0 00-3.375-3.375H8.25m0 12.75h7.5m-7.5 3H12M10.5 2.25H5.625c-.621 0-1.125.504-1.125 1.125v17.25c0 .621.504 1.125 1.125 1.125h12.75c.621 0 1.125-.504 1.125-1.125V11.25a9 9 0 00-9-9z" />
-            </svg>
-        );
-        const PencilIcon = ({ className = "w-6 h-6" }) => (
-            <svg aria-hidden="true" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className={className}>
-                <path strokeLinecap="round" strokeLinejoin="round" d="M16.862 4.487l1.687-1.688a1.875 1.875 0 112.652 2.652L10.582 16.07a4.5 4.5 0 01-1.897 1.13L6 18l.8-2.685a4.5 4.5 0 011.13-1.897l8.932-8.931zm0 0L19.5 7.125M18 14v4.75A2.25 2.25 0 0115.75 21H5.25A2.25 2.25 0 013 18.75V8.25A2.25 2.25 0 015.25 6H10" />
             </svg>
         );
         const EyeIcon = ({ className = "w-6 h-6" }) => (
@@ -238,127 +232,6 @@
         };
 
         // =========================
-        // DRAWING CANVAS COMPONENT
-        // =========================
-        const DrawingCanvas = ({
-            width,
-            height,
-            lineColor = '#000000',
-            lineWidth = 8,
-            backgroundColor = '#FFFFFF',
-            onDrawEnd,
-            setClearCanvasFunc,
-            setGetDrawingFunc,
-        }) => {
-            const canvasRef = React.useRef(null);
-            const [isDrawing, setIsDrawing] = React.useState(false);
-            const [context, setContext] = React.useState(null);
-            React.useEffect(() => {
-                if (canvasRef.current) {
-                    const ctx = canvasRef.current.getContext('2d');
-                    if (ctx) {
-                        ctx.lineCap = 'round';
-                        ctx.lineJoin = 'round';
-                        ctx.strokeStyle = lineColor;
-                        ctx.lineWidth = lineWidth;
-                        ctx.fillStyle = backgroundColor;
-                        ctx.fillRect(0, 0, width, height);
-                        setContext(ctx);
-                    }
-                }
-            }, [width, height, lineColor, lineWidth, backgroundColor]);
-            const getMousePosition = (event) => {
-                if (!canvasRef.current) return { x: 0, y: 0 };
-                const rect = canvasRef.current.getBoundingClientRect();
-                let clientX, clientY;
-                if (event.touches) {
-                    clientX = event.touches[0].clientX;
-                    clientY = event.touches[0].clientY;
-                } else {
-                    clientX = event.clientX;
-                    clientY = event.clientY;
-                }
-                return {
-                    x: clientX - rect.left,
-                    y: clientY - rect.top,
-                };
-            };
-            const startDrawing = React.useCallback((event) => {
-                event.preventDefault();
-                if (context) {
-                    const { x, y } = getMousePosition(event);
-                    context.beginPath();
-                    context.moveTo(x, y);
-                    setIsDrawing(true);
-                }
-            }, [context]);
-            const draw = React.useCallback((event) => {
-                event.preventDefault();
-                if (isDrawing && context) {
-                    const { x, y } = getMousePosition(event);
-                    context.lineTo(x, y);
-                    context.stroke();
-                }
-            }, [isDrawing, context]);
-            const stopDrawing = React.useCallback(() => {
-                if (isDrawing && context) {
-                    context.closePath();
-                    setIsDrawing(false);
-                    if (onDrawEnd && canvasRef.current) {
-                        onDrawEnd(canvasRef.current.toDataURL('image/png'));
-                    }
-                }
-            }, [isDrawing, context, onDrawEnd]);
-            const clearCanvas = React.useCallback(() => {
-                if (context && canvasRef.current) {
-                    context.fillStyle = backgroundColor;
-                    context.fillRect(0, 0, canvasRef.current.width, canvasRef.current.height);
-                }
-            }, [context, backgroundColor]);
-            const getDrawingAsDataURL = React.useCallback(() => {
-                if (canvasRef.current) {
-                    return canvasRef.current.toDataURL('image/png');
-                }
-                return '';
-            }, []);
-            React.useEffect(() => {
-                if (setClearCanvasFunc) setClearCanvasFunc(() => clearCanvas);
-                if (setGetDrawingFunc) setGetDrawingFunc(() => getDrawingAsDataURL);
-            }, [clearCanvas, getDrawingAsDataURL, setClearCanvasFunc, setGetDrawingFunc]);
-            React.useEffect(() => {
-                const canvas = canvasRef.current;
-                if (!canvas) return;
-                canvas.addEventListener('mousedown', startDrawing);
-                canvas.addEventListener('mousemove', draw);
-                canvas.addEventListener('mouseup', stopDrawing);
-                canvas.addEventListener('mouseleave', stopDrawing);
-                canvas.addEventListener('touchstart', startDrawing, { passive: false });
-                canvas.addEventListener('touchmove', draw, { passive: false });
-                canvas.addEventListener('touchend', stopDrawing);
-                canvas.addEventListener('touchcancel', stopDrawing);
-                return () => {
-                    canvas.removeEventListener('mousedown', startDrawing);
-                    canvas.removeEventListener('mousemove', draw);
-                    canvas.removeEventListener('mouseup', stopDrawing);
-                    canvas.removeEventListener('mouseleave', stopDrawing);
-                    canvas.removeEventListener('touchstart', startDrawing);
-                    canvas.removeEventListener('touchmove', draw);
-                    canvas.removeEventListener('touchend', stopDrawing);
-                    canvas.removeEventListener('touchcancel', stopDrawing);
-                };
-            }, [startDrawing, draw, stopDrawing]);
-            return (
-                <canvas
-                    ref={canvasRef}
-                    width={width}
-                    height={height}
-                    className="border border-slate-400 rounded-lg shadow-inner bg-white touch-none"
-                    style={{ touchAction: 'none' }}
-                />
-            );
-        };
-
-        // =========================
         // GAME CONSTANTS
         // =========================
         const WORD_LIST = [
@@ -379,11 +252,8 @@
         // =========================
         // SPELLING ANALYSIS (NO AI)
         // =========================
-        async function analyzeSpellingAttempt(targetWord, attempt, drawingDataUrl) {
+        async function analyzeSpellingAttempt(targetWord, attempt) {
             console.warn("Using fallback logic for spelling analysis. Add API Key for AI feedback.");
-            if (drawingDataUrl) {
-                return { isCorrect: false, message: "Oops! Drawing analysis needs an API key. Please add it to the code.", attemptedWord: "Drawing (no API)" };
-            }
             const normalizedTarget = targetWord.toLowerCase().replace(/[^a-z0-9]/gi, '');
             const normalizedAttempt = attempt.toLowerCase().replace(/[^a-z0-9]/gi, '');
             if (normalizedTarget === normalizedAttempt) {
@@ -413,8 +283,6 @@
             const [lastFeedback, setLastFeedback] = React.useState(null);
             const [lastUnlockedReward, setLastUnlockedReward] = React.useState(null);
             const [typedAttempt, setTypedAttempt] = React.useState("");
-            const drawingCanvasClearFunc = React.useRef(null);
-            const drawingCanvasGetDrawingFunc = React.useRef(null);
             const [isCurrentWordRevealed, setIsCurrentWordRevealed] = React.useState(false);
 
             // --- EFFECT: Load progress and setup speech recognition on mount ---
@@ -474,7 +342,6 @@
                 setLastFeedback(null);
                 setLastUnlockedReward(null);
                 setTypedAttempt("");
-                drawingCanvasClearFunc.current?.();
                 setIsCurrentWordRevealed(false);
 
                 if (currentWordIndex >= WORD_LIST.length) {
@@ -504,16 +371,15 @@
             const handleChangeInputMethod = (method) => {
                 setCurrentInputMethod(method);
                 setTypedAttempt("");
-                drawingCanvasClearFunc.current?.();
                 // speech input removed
             };
 
-            // --- Handle spelling attempt (typed, spoken, or drawn) ---
-            const handleSpellingAttempt = async (attemptText, drawingDataUrl) => {
+            // --- Handle spelling attempt (typed) ---
+            const handleSpellingAttempt = async (attemptText) => {
                 if (!currentWord) return;
 
-                if (!drawingDataUrl && attemptText.trim() === "") {
-                    setLastFeedback({ isCorrect: false, message: "I didn't catch any spelling. Try saying, typing, or drawing the letters!", attemptedWord: attemptText });
+                if (attemptText.trim() === "") {
+                    setLastFeedback({ isCorrect: false, message: "I didn't catch any spelling. Try typing the letters!", attemptedWord: attemptText });
                     setGamePhase(GamePhase.DISPLAYING_FEEDBACK);
                     setIsProcessing(false);
                     return;
@@ -522,8 +388,7 @@
                 setIsProcessing(true);
                 setGamePhase(GamePhase.PROCESSING_SPEECH);
 
-                const textForAnalysis = drawingDataUrl ? "See drawing" : attemptText;
-                const feedback = await analyzeSpellingAttempt(currentWord.text, textForAnalysis, drawingDataUrl);
+                const feedback = await analyzeSpellingAttempt(currentWord.text, attemptText);
 
                 let finalMessage = feedback.message;
 
@@ -558,23 +423,13 @@
             // --- Submit typed spelling attempt ---
             const handleSubmitTypedAttempt = () => {
                 if (typedAttempt.trim()) {
-                    handleSpellingAttempt(typedAttempt, null);
+                    handleSpellingAttempt(typedAttempt);
                 } else {
                     setLastFeedback({ isCorrect: false, message: "Please type your spelling!", attemptedWord: "" });
                     setGamePhase(GamePhase.DISPLAYING_FEEDBACK);
                 }
             };
 
-            // --- Submit drawing spelling attempt ---
-            const handleSubmitDrawingAttempt = () => {
-                const drawingData = drawingCanvasGetDrawingFunc.current?.();
-                if (drawingData) {
-                    handleSpellingAttempt("", drawingData);
-                } else {
-                    setLastFeedback({ isCorrect: false, message: "Couldn't get the drawing. Try again!", attemptedWord: "Drawing error" });
-                    setGamePhase(GamePhase.DISPLAYING_FEEDBACK);
-                }
-            };
 
             // --- Reveal the current word (no XP if revealed) ---
             const handleRevealWord = () => {
@@ -631,37 +486,6 @@
                             </div>
                         )}
 
-                        {currentInputMethod === InputMethod.DRAW && (
-                            <div className="flex flex-col items-center w-full">
-                                <DrawingCanvas
-                                    width={320}
-                                    height={160}
-                                    backgroundColor="#EFF6FF"
-                                    lineColor="#0C4A6E"
-                                    lineWidth={10}
-                                    setClearCanvasFunc={(func) => { drawingCanvasClearFunc.current = func; }}
-                                    setGetDrawingFunc={(func) => { drawingCanvasGetDrawingFunc.current = func; }}
-                                />
-                                <div className="flex space-x-3 mt-3">
-                                    <button
-                                        onClick={() => drawingCanvasClearFunc.current?.()}
-                                        disabled={isProcessing || isCurrentWordRevealed}
-                                        className="px-4 py-2 bg-slate-400 hover:bg-slate-500 text-white font-semibold rounded-lg shadow-md disabled:opacity-60 transform hover:scale-105 transition-transform"
-                                        aria-label="Clear drawing"
-                                    >
-                                        Clear
-                                    </button>
-                                    <button
-                                        onClick={handleSubmitDrawingAttempt}
-                                        disabled={isProcessing || isCurrentWordRevealed}
-                                        className="px-6 py-3 bg-green-500 hover:bg-green-600 text-white font-semibold rounded-lg shadow-md disabled:opacity-60 transform hover:scale-105 transition-transform focus:outline-none focus:ring-4 focus:ring-green-300"
-                                        aria-label="Submit drawing"
-                                    >
-                                        Submit Drawing
-                                    </button>
-                                </div>
-                            </div>
-                        )}
                     </>
                 );
             };
@@ -694,7 +518,6 @@
                         let instructionText = "Your turn to spell:";
                         if (gamePhase === GamePhase.PRESENTING_WORD) instructionText = "Listen to the word...";
                         else if (gamePhase === GamePhase.LISTENING && currentInputMethod === InputMethod.TYPE) instructionText = "Type the word:";
-                        else if (gamePhase === GamePhase.LISTENING && currentInputMethod === InputMethod.DRAW) instructionText = "Draw the letters:";
                         else if (gamePhase === GamePhase.PROCESSING_SPEECH) instructionText = "Checking your amazing spelling...";
 
                         const showActualWord = isCurrentWordRevealed || gamePhase === GamePhase.PROCESSING_SPEECH || gamePhase === GamePhase.DISPLAYING_FEEDBACK;
@@ -828,13 +651,6 @@
                                 aria-label="Use keyboard input"
                             >
                                 <KeyboardIcon className="w-6 h-6" />
-                            </button>
-                            <button
-                                onClick={() => handleChangeInputMethod(InputMethod.DRAW)}
-                                className={`p-2 rounded-full ${currentInputMethod === InputMethod.DRAW ? 'bg-blue-500 text-white' : 'bg-slate-200 text-blue-700'} hover:bg-blue-400 focus:outline-none focus:ring-2 focus:ring-blue-300`}
-                                aria-label="Use drawing input"
-                            >
-                                <PencilIcon className="w-6 h-6" />
                             </button>
                         </div>
                     </header>

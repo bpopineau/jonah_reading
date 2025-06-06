@@ -11,7 +11,5 @@ export const GamePhase = {
     ALL_WORDS_COMPLETED: 'ALL_WORDS_COMPLETED',
 };
 export const InputMethod = {
-    SPEAK: 'speak',
     TYPE: 'type',
-    DRAW: 'draw',
 };

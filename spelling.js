@@ -1,11 +1,8 @@
 // =========================
 // SPELLING ANALYSIS (NO AI)
 // =========================
-// Checks spelling attempt (typed, spoken, or drawing)
-export async function analyzeSpellingAttempt(targetWord, attempt, drawingDataUrl) {
-    if (drawingDataUrl) {
-        return { isCorrect: false, message: "Drawing analysis is not available. Please type or speak the word.", attemptedWord: "Drawing (not supported)" };
-    }
+// Checks spelling attempt (typed)
+export async function analyzeSpellingAttempt(targetWord, attempt) {
     const normalizedTarget = targetWord.toLowerCase().replace(/[^a-z0-9]/gi, '');
     const normalizedAttempt = attempt.toLowerCase().replace(/[^a-z0-9]/gi, '');
     if (normalizedTarget === normalizedAttempt) {

@@ -38,7 +38,7 @@ Simply open `main.html` in your web browser. No build step or server required.
 
 - `main.html`
   The entire app is inlined here for browser compatibility. Contains all React components, logic, and styles.
-- `types.js`, `icons.js`, `Avatar.js`, `DrawingCanvas.js`, `constants.js`, `spelling.js`
+- `types.js`, `icons.js`, `Avatar.js`, `constants.js`, `spelling.js`
   (Not used in the browser version, but provided for modularity if you want to refactor for a build process.)
 
 ---
