@@ -487,18 +487,19 @@
                 const savedProgressRaw = localStorage.getItem('spellAndLearnProgress');
                 if (savedProgressRaw) {
                     const savedProgress = JSON.parse(savedProgressRaw);
+                    const idx = savedProgress.currentWordIndex || 0;
                     setUserProgress({
                         xp: savedProgress.xp || 0,
                         correctlySpelledWords: savedProgress.correctlySpelledWords || [],
                         unlockedRewards: savedProgress.unlockedRewards || [],
                         companionType: savedProgress.companionType || 'pikachu',
+                        currentWordIndex: idx,
                     });
-                    const idx = savedProgress.currentWordIndex || 0;
                     setCurrentWordIndex(idx);
                     if (savedProgress.correctlySpelledWords && savedProgress.correctlySpelledWords.length >= WORD_LIST.length) {
                         setGamePhase(GamePhase.ALL_WORDS_COMPLETED);
                     } else if (idx > 0 || savedProgress.xp > 0) {
-                        setTimeout(() => startNextWord(), 100);
+                        setTimeout(() => startNextWordRef.current(), 100);
                     }
                 }
 
@@ -507,7 +508,10 @@
 
             // --- EFFECT: Save progress and unlock rewards when XP changes ---
             React.useEffect(() => {
-                localStorage.setItem('spellAndLearnProgress', JSON.stringify(userProgress));
+                localStorage.setItem(
+                    'spellAndLearnProgress',
+                    JSON.stringify({ ...userProgress, currentWordIndex })
+                );
                 const newRewards = REWARDS.filter(
                     (reward) => userProgress.xp >= reward.xpThreshold && !userProgress.unlockedRewards.includes(reward.name)
                 );
@@ -524,7 +528,7 @@
                     }));
                     setLastUnlockedReward(latestNewReward);
                 }
-            }, [userProgress]);
+            }, [userProgress, currentWordIndex]);
 
             // --- SPEECH SYNTHESIS (for feedback and word reading) ---
             const speakText = React.useCallback((text, onEndCallback) => {
@@ -563,6 +567,12 @@
                     setGamePhase(GamePhase.LISTENING);
                 });
             }, [currentWordIndex, speakText]);
+
+            // Keep latest startNextWord reference for delayed calls
+            const startNextWordRef = React.useRef(startNextWord);
+            React.useEffect(() => {
+                startNextWordRef.current = startNextWord;
+            }, [startNextWord]);
 
             // --- Start game handler ---
             const handleStartGame = () => {
@@ -654,7 +664,7 @@
                     return next;
                 });
                 setTimeout(() => {
-                    startNextWord();
+                    startNextWordRef.current();
                 }, 100);
             };
 
