@@ -278,6 +278,7 @@
                 correctlySpelledWords: [],
                 unlockedRewards: [],
                 companionType: 'pikachu', // Pikachu is the buddy from the start!
+                currentWordIndex: 0,
             });
             const [isProcessing, setIsProcessing] = React.useState(false);
             const [lastFeedback, setLastFeedback] = React.useState(null);
@@ -296,6 +297,13 @@
                         unlockedRewards: savedProgress.unlockedRewards || [],
                         companionType: savedProgress.companionType || 'pikachu',
                     });
+                    const idx = savedProgress.currentWordIndex || 0;
+                    setCurrentWordIndex(idx);
+                    if (savedProgress.correctlySpelledWords && savedProgress.correctlySpelledWords.length >= WORD_LIST.length) {
+                        setGamePhase(GamePhase.ALL_WORDS_COMPLETED);
+                    } else if (idx > 0 || savedProgress.xp > 0) {
+                        setTimeout(() => startNextWord(), 100);
+                    }
                 }
 
                 // speech recognition removed
@@ -348,6 +356,8 @@
                 if (currentWordIndex >= WORD_LIST.length) {
                     setGamePhase(GamePhase.ALL_WORDS_COMPLETED);
                     speakText("Wow, you've spelled all the words! You're a spelling superstar!");
+                    setCurrentWordIndex(0);
+                    setUserProgress(prev => ({ ...prev, currentWordIndex: 0 }));
                     return;
                 }
                 const word = WORD_LIST[currentWordIndex];
@@ -361,7 +371,7 @@
             // --- Start game handler ---
             const handleStartGame = () => {
                 setCurrentWordIndex(0);
-                const initialProgress = { xp: 0, correctlySpelledWords: [], unlockedRewards: [], companionType: 'pikachu' };
+                const initialProgress = { xp: 0, correctlySpelledWords: [], unlockedRewards: [], companionType: 'pikachu', currentWordIndex: 0 };
                 setUserProgress(initialProgress);
                 localStorage.setItem('spellAndLearnProgress', JSON.stringify(initialProgress));
                 setLastUnlockedReward(null);
@@ -442,7 +452,11 @@
 
             // --- Advance to next word after feedback ---
             const advanceToNextWordFromFeedback = () => {
-                setCurrentWordIndex(prev => prev + 1);
+                setCurrentWordIndex(prev => {
+                    const next = prev + 1;
+                    setUserProgress(p => ({ ...p, currentWordIndex: next }));
+                    return next;
+                });
                 setTimeout(() => {
                     startNextWord();
                 }, 100);
