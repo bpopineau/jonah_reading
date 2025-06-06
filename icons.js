@@ -1,7 +1,9 @@
 // =========================
 // ICON COMPONENTS (SVG)
 // =========================
-// All SVG React components for UI buttons and feedback
+// All React SVG components for UI buttons and feedback.
+// This module mirrors the inline icons in `main.html` so they can be reused
+// across the application.
 import React from 'react';
 
 
@@ -74,5 +76,5 @@ export const EyeIcon = ({ className = "w-6 h-6" }) => (
     </svg>
 );
 
-// All icon components above are exported for reuse in a modular build
+// All icon components above are exported for reuse throughout the project.
 
