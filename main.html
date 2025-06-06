@@ -290,10 +290,11 @@
                 const savedProgressRaw = localStorage.getItem('spellAndLearnProgress');
                 if (savedProgressRaw) {
                     const savedProgress = JSON.parse(savedProgressRaw);
-                    // For the test, we override the saved companion with Pikachu
                     setUserProgress({
-                        ...savedProgress,
-                        companionType: 'pikachu',
+                        xp: savedProgress.xp || 0,
+                        correctlySpelledWords: savedProgress.correctlySpelledWords || [],
+                        unlockedRewards: savedProgress.unlockedRewards || [],
+                        companionType: savedProgress.companionType || 'pikachu',
                     });
                 }
 
