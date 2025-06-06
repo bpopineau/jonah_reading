@@ -485,21 +485,22 @@
             // --- EFFECT: Load progress and setup speech recognition on mount ---
             React.useEffect(() => {
                 const savedProgressRaw = localStorage.getItem('spellAndLearnProgress');
-                if (savedProgressRaw) {
-                    const savedProgress = JSON.parse(savedProgressRaw);
-                    setUserProgress({
-                        xp: savedProgress.xp || 0,
-                        correctlySpelledWords: savedProgress.correctlySpelledWords || [],
-                        unlockedRewards: savedProgress.unlockedRewards || [],
-                        companionType: savedProgress.companionType || 'pikachu',
-                    });
-                    const idx = savedProgress.currentWordIndex || 0;
-                    setCurrentWordIndex(idx);
-                    if (savedProgress.correctlySpelledWords && savedProgress.correctlySpelledWords.length >= WORD_LIST.length) {
-                        setGamePhase(GamePhase.ALL_WORDS_COMPLETED);
-                    } else if (idx > 0 || savedProgress.xp > 0) {
-                        setTimeout(() => startNextWord(), 100);
-                    }
+                if (!savedProgressRaw) {
+                    return;
+                }
+                const savedProgress = JSON.parse(savedProgressRaw);
+                setUserProgress({
+                    xp: savedProgress.xp || 0,
+                    correctlySpelledWords: savedProgress.correctlySpelledWords || [],
+                    unlockedRewards: savedProgress.unlockedRewards || [],
+                    companionType: savedProgress.companionType || 'pikachu',
+                });
+                const idx = savedProgress.currentWordIndex || 0;
+                setCurrentWordIndex(idx);
+                if (savedProgress.correctlySpelledWords && savedProgress.correctlySpelledWords.length >= WORD_LIST.length) {
+                    setGamePhase(GamePhase.ALL_WORDS_COMPLETED);
+                } else if (idx > 0 || savedProgress.xp > 0) {
+                    setTimeout(() => startNextWord(), 100);
                 }
 
                 // speech recognition removed
